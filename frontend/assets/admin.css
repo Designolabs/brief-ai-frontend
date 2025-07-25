@@ -1,30 +1,27 @@
 :root {
     --innovopedia-primary-color: #0073aa;
-    --innovopedia-secondary-color: #00a0d2;
-    --innovopedia-success-color: #4CAF50;
-    --innovopedia-error-color: #d63638;
     --innovopedia-bg-light: #f9f9f9;
     --innovopedia-border-color: #ddd;
     --innovopedia-text-dark: #333;
     --innovopedia-text-light: #555;
+    --innovopedia-success: #28a745;
+    --innovopedia-danger: #dc3545;
 }
 
 .innovopedia-admin-wrap {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
-    max-width: 1200px;
+    max-width: 1400px;
 }
-
-.innovopedia-admin-wrap h1 {
-    font-size: 2em;
-    margin-bottom: 20px;
-    border-bottom: 1px solid var(--innovopedia-border-color);
-    padding-bottom: 15px;
+.innovopedia-admin-wrap h1 .dashicons {
+    font-size: 1.2em;
+    vertical-align: middle;
 }
 
 .innovopedia-admin-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
     gap: 20px;
+    margin-top: 20px;
 }
 
 .innovopedia-admin-section {
@@ -32,106 +29,87 @@
     border: 1px solid var(--innovopedia-border-color);
     border-radius: 4px;
     padding: 20px;
-    box-shadow: 0 1px 1px rgba(0,0,0,.04);
 }
-
 .innovopedia-admin-section.wide-section {
     grid-column: span 2;
 }
-
-@media (max-width: 960px) {
-    .innovopedia-admin-section.wide-section {
-        grid-column: span 1;
-    }
+@media (max-width: 1100px) {
+    .innovopedia-admin-section.wide-section { grid-column: span 1; }
 }
 
 .innovopedia-admin-section h2 {
     font-size: 1.2em;
-    margin-top: 0;
-    margin-bottom: 15px;
+    margin: 0 0 15px;
     display: flex;
     align-items: center;
     gap: 8px;
-    color: var(--innovopedia-text-dark);
 }
 
-.innovopedia-admin-section .button .dashicons {
-    margin-right: 5px;
-}
-
-/* Data lists for feedback, questions, moderation */
-.data-list {
-    max-height: 300px;
-    overflow-y: auto;
-    border: 1px solid var(--innovopedia-border-color);
-    border-radius: 3px;
+.data-container, .data-list, .data-list-interactive {
     margin-top: 10px;
+    border: 1px solid #f0f0f0;
+    padding: 15px;
+    border-radius: 3px;
+    background: #fafafa;
+}
+
+.data-list, .data-list-interactive {
+    max-height: 350px;
+    overflow-y: auto;
 }
 
 .data-list-item {
-    padding: 10px;
+    padding: 12px;
     border-bottom: 1px solid var(--innovopedia-border-color);
 }
-.data-list-item:last-child {
-    border-bottom: none;
-}
-.data-list-item strong {
-    display: block;
-    color: var(--innovopedia-text-dark);
-}
-.data-list-item p {
-    margin: 5px 0 0;
-    color: var(--innovopedia-text-light);
-    font-style: italic;
-}
-.data-list-item .meta {
-    font-size: 0.9em;
-    color: #999;
-    margin-top: 5px;
-}
-.data-list-item .status-moderated {
-    color: var(--innovopedia-success-color);
-    font-weight: bold;
-}
-.data-list-item .status-pending {
-    color: var(--innovopedia-error-color);
-    font-weight: bold;
-}
+.data-list-item:last-child { border-bottom: none; }
+.data-list-item p { margin: 0; font-style: italic; color: var(--innovopedia-text-light); }
+.data-list-item .meta { font-size: 0.9em; color: #999; margin-top: 5px; }
 
-/* API Health status */
-#innovopedia-brief-admin-api-health p {
-    padding: 8px 12px;
-    border-radius: 4px;
-    font-weight: bold;
-    display: inline-block;
-    margin: 0;
+/* Interactive Moderation */
+.moderation-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px;
+    border-bottom: 1px solid var(--innovopedia-border-color);
 }
-.api-health-ok {
-    background-color: #e6ffe6;
-    color: #008000;
-}
-.api-health-error {
-    background-color: #ffe6e6;
-    color: #cc0000;
-}
+.moderation-item p { flex-grow: 1; margin: 0; }
+.moderation-actions button { margin-left: 5px; }
+.moderation-item.approved { background-color: #eaf5e8; }
+.moderation-item.rejected { background-color: #fbe9e7; text-decoration: line-through; }
 
-/* Loading/Spinner */
-.button .spinner {
-    display: inline-block;
-    vertical-align: middle;
-    margin-right: 5px;
+/* Email Form */
+#innovopedia-email-summary-form {
+    display: flex;
+    gap: 10px;
 }
-
-.result-message {
-    margin-top: 10px;
-    padding: 10px;
+#innovopedia-email-summary-form textarea {
+    width: 100%;
+    height: 40px;
+    padding: 8px;
     border-radius: 3px;
+    border: 1px solid var(--innovopedia-border-color);
 }
-.result-message.success {
-    background-color: #e6ffe6;
-    color: #008000;
+
+/* General UI */
+.result-message {
+    padding: 10px;
+    margin-top: 10px;
+    border-radius: 3px;
+    border: 1px solid transparent;
 }
-.result-message.error {
-    background-color: #ffe6e6;
-    color: #cc0000;
+.result-message.success { border-color: var(--innovopedia-success); background: #eaf5e8; color: var(--innovopedia-success); }
+.result-message.error { border-color: var(--innovopedia-danger); background: #fbe9e7; color: var(--innovopedia-danger); }
+
+#innovopedia-brief-admin-api-health p {
+    font-weight: bold;
+    padding: 8px;
+    border-radius: 3px;
+    display: inline-block;
 }
+.api-health-ok { background: var(--innovopedia-success); color: #fff; }
+.api-health-error { background: var(--innovopedia-danger); color: #fff; }
+
+.button .spin { animation: spin 1s linear infinite; }
+@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
