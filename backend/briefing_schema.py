@@ -15,4 +15,5 @@ class AdvancedBriefingResponse(BaseModel):
     greeting: str
     intro: str
     stories: List[Story]
+    more_stories: List[Story]
     topics: List[str]
