@@ -97,7 +97,7 @@ function innovopedia_brief_get_data_with_caching() {
     if (empty($api_base_url)) wp_send_json_error(['message' => 'API not configured.']);
 
     $url = rtrim($api_base_url, '/') . '/get-briefing-advanced';
-    $response = wp_remote_get($url, ['headers' => ['X-API-Key' => $api_key]]);
+    $response = wp_remote_get($url, ['headers' => ['X-API-Key' => $api_key], 'timeout' => 30]); // Increased timeout
 
     if (is_wp_error($response)) {
         wp_send_json_error(['message' => $response->get_error_message()]);
@@ -213,7 +213,7 @@ add_action('wp_ajax_innovopedia_brief_moderate_content', function() {
     if (!in_array($status, ['approved', 'rejected'])) wp_send_json_error(['message' => 'Invalid status.']);
 
     $options = get_option('innovopedia_brief_settings');
-    $url = rtrim($options['api_base_url'], '/') . '/v1/moderate-content'; // Assuming a v1 API for moderation
+    $url = rtrim($options['api_base_url'], '/') . '/v1/story-interaction'; // Assuming a v1 API for moderation
     $args = [
         'method' => 'POST',
         'headers' => ['Content-Type' => 'application/json', 'X-API-Key' => $options['api_key']],
@@ -222,11 +222,11 @@ add_action('wp_ajax_innovopedia_brief_moderate_content', function() {
     $response = wp_remote_post($url, $args);
     
     if (is_wp_error($response)) {
-        wp_send_json_error(['message' => 'Error moderating content: ' . $response->get_error_message()]);
+        wp_send_json_error(['message' => 'Error sending like: ' . $response->get_error_message()]);
     } else {
         $http_code = wp_remote_retrieve_response_code($response);
         if ($http_code >= 200 && $http_code < 300) {
-            wp_send_json_success(['message' => 'Content moderated!']);
+            wp_send_json_success(['message' => 'Story liked!']);
         } else {
             wp_send_json_error(['message' => "API Error ($http_code): " . wp_remote_retrieve_body($response)]);
         }
@@ -245,7 +245,7 @@ function innovopedia_brief_proxy_admin_get_request($endpoint) {
     if (empty($api_base_url)) wp_send_json_error(['message' => 'API Base URL not set.']);
 
     $url = rtrim($api_base_url, '/') . $endpoint;
-    $args = ['headers' => ['X-API-Key' => $api_key]];
+    $args = ['headers' => ['X-API-Key' => $api_key], 'timeout' => 30]; // Increased timeout
     $response = wp_remote_get($url, $args);
 
     if (is_wp_error($response)) wp_send_json_error(['message' => $response->get_error_message()]);
