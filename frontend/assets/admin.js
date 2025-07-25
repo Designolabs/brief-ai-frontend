@@ -54,7 +54,7 @@ jQuery(document).ready(function($) {
 
     const checkApiHealth = () => {
         if (!api.baseUrl) return $('#innovopedia-brief-admin-api-health').html('<p class="api-health-error">API URL Not Set</p>');
-        $.ajax({ url: `${api.baseUrl}/health`, headers: { 'X-API-Key': api.key } })
+        $.ajax({ url: `${api.baseUrl}/admin-status`, headers: { 'X-API-Key': api.key } })
             .done(() => $('#innovopedia-brief-admin-api-health').html('<p class="api-health-ok">API Healthy</p>'))
             .fail(() => $('#innovopedia-brief-admin-api-health').html('<p class="api-health-error">API Unreachable</p>'));
     };
