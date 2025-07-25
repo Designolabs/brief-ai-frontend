@@ -24,7 +24,15 @@ require_once INNOVOPEDIA_BRIEF_DIR . 'admin/settings.php';
 // Activation hook
 function innovopedia_brief_activate() {
     // Set default options, etc.
-    add_option('innovopedia_brief_settings', ['api_base_url' => '', 'trend_schedule' => 'daily'], '', 'yes');
+    $default_settings = [
+        'api_base_url' => '',
+        'api_key' => '',
+        'primary_color' => '#00bcd4', // Default accent color
+        'secondary_color' => '#4CAF50', // Default success color
+        'border_radius' => '15px',
+        'trend_schedule' => 'daily',
+    ];
+    add_option('innovopedia_brief_settings', $default_settings, '', 'yes');
     
     // Schedule initial trend analysis if not already scheduled
     if (!wp_next_scheduled('innovopedia_brief_daily_trend_analysis')) {
@@ -175,4 +183,47 @@ add_action( 'wp_ajax_innovopedia_brief_get_trend_schedule', function() {
     $options = get_option('innovopedia_brief_settings', []);
     $current_schedule = isset($options['trend_schedule']) ? $options['trend_schedule'] : 'daily';
     wp_send_json_success(['schedule' => $current_schedule]);
+});
+
+// Function to train AI on website content
+add_action( 'wp_ajax_innovopedia_brief_train_ai', function() {
+    check_ajax_referer('innovopedia_brief_admin', 'nonce');
+    if (!current_user_can('manage_options')) {
+        wp_send_json_error(['message' => 'Permission denied.']);
+    }
+
+    $options = get_option('innovopedia_brief_settings', []);
+    $api_base_url = isset($options['api_base_url']) ? $options['api_base_url'] : '';
+    $api_key = isset($options['api_key']) ? $options['api_key'] : '';
+
+    if (empty($api_base_url)) {
+        wp_send_json_error(['message' => 'API Base URL not set in plugin settings.']);
+    }
+
+    $train_url = rtrim($api_base_url, '/') . '/admin-train-ai';
+    
+    $args = [
+        'method'    => 'POST',
+        'headers'   => [
+            'Content-Type' => 'application/json',
+            'X-API-Key' => $api_key // Pass API Key in header
+        ],
+        'body'      => json_encode(['action' => 'train', 'source' => 'website_content']),
+        'timeout'   => 60, // Increase timeout for potentially long training process
+    ];
+
+    $response = wp_remote_post($train_url, $args);
+
+    if (is_wp_error($response)) {
+        wp_send_json_error(['message' => 'Error training AI: ' . $response->get_error_message()]);
+    }
+
+    $body = wp_remote_retrieve_body($response);
+    $http_code = wp_remote_retrieve_response_code($response);
+
+    if ($http_code === 200) {
+        wp_send_json_success(['message' => 'AI training initiated successfully.', 'response' => json_decode($body)]);
+    } else {
+        wp_send_json_error(['message' => 'AI training failed with status ' . $http_code . ': ' . $body]);
+    }
 });
