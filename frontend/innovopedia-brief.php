@@ -8,7 +8,7 @@ Text Domain: innovopedia-brief
 Domain Path: /languages
 */
 
-if ( ! defined( 'ABSPATH' ) ) exit;
+if ( ! defined( 'ABSPath' ) ) exit;
 
 define( 'INNOVOPEDIA_BRIEF_VERSION', '1.2.0' );
 define( 'INNOVOPEDIA_BRIEF_DIR', plugin_dir_path( __FILE__ ) );
@@ -167,7 +167,7 @@ add_action('wp_ajax_innovopedia_brief_send_email_summary', function() {
     $body .= '<h1>' . esc_html($data['greeting']) . '</h1>';
     $body .= '<p>' . esc_html($data['intro']) . '</p>';
     $body .= '<hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">';
-    $body .= '<h2>Today's Stories:</h2>';
+    $body .= "<h2>Today's Stories:</h2>";
     foreach($data['stories'] as $story) {
         $body .= '<div style="margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px dashed #f0f0f0;">';
         $body .= '<h3>' . esc_html($story['title']) . '</h3>';
@@ -296,6 +296,6 @@ add_action( 'wp_ajax_innovopedia_brief_train_ai', function() {
     if ($http_code >= 200 && $http_code < 300) {
         wp_send_json_success(json_decode($body));
     } else {
-        wp_send_json_error(['message' => "API Error ($http_code): $body"]);
+        wp_send_json_error(['message' => "API Error ($http_code): " . wp_remote_retrieve_body($response)]);
     }
 });
