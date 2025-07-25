@@ -2,16 +2,15 @@
 /*
 Plugin Name: Innovopedia Brief
 Description: AI-powered news briefing popup with advanced UI/UX and admin dashboard.
-Version: 1.0.1
+Version: 1.1.0
 Author: Designolabs Studio
 Text Domain: innovopedia-brief
 Domain Path: /languages
-Text Domain: innovopedia-brief
 */
 
 if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
-define( 'INNOVOPEDIA_BRIEF_VERSION', '1.0.0' );
+define( 'INNOVOPEDIA_BRIEF_VERSION', '1.1.0' );
 define( 'INNOVOPEDIA_BRIEF_DIR', plugin_dir_path( __FILE__ ) );
 define( 'INNOVOPEDIA_BRIEF_URL', plugin_dir_url( __FILE__ ) );
 
@@ -23,18 +22,16 @@ require_once INNOVOPEDIA_BRIEF_DIR . 'admin/settings.php';
 
 // Activation hook
 function innovopedia_brief_activate() {
-    // Set default options, etc.
     $default_settings = [
         'api_base_url' => '',
         'api_key' => '',
-        'primary_color' => '#00bcd4', // Default accent color
-        'secondary_color' => '#4CAF50', // Default success color
+        'primary_color' => '#00bcd4',
+        'secondary_color' => '#4CAF50',
         'border_radius' => '15px',
         'trend_schedule' => 'daily',
     ];
     add_option('innovopedia_brief_settings', $default_settings, '', 'yes');
     
-    // Schedule initial trend analysis if not already scheduled
     if (!wp_next_scheduled('innovopedia_brief_daily_trend_analysis')) {
         wp_schedule_event(time(), 'daily', 'innovopedia_brief_daily_trend_analysis');
     }
@@ -43,7 +40,6 @@ register_activation_hook( __FILE__, 'innovopedia_brief_activate' );
 
 // Deactivation hook
 function innovopedia_brief_deactivate() {
-    // Clean up, etc.
     wp_clear_scheduled_hook('innovopedia_brief_daily_trend_analysis');
     wp_clear_scheduled_hook('innovopedia_brief_weekly_trend_analysis');
     wp_clear_scheduled_hook('innovopedia_brief_monthly_trend_analysis');
@@ -52,7 +48,6 @@ register_deactivation_hook( __FILE__, 'innovopedia_brief_deactivate' );
 
 // Uninstall hook
 function innovopedia_brief_uninstall() {
-    // Clean up, etc.
     delete_option('innovopedia_brief_settings');
     wp_clear_scheduled_hook('innovopedia_brief_daily_trend_analysis');
     wp_clear_scheduled_hook('innovopedia_brief_weekly_trend_analysis');
@@ -70,240 +65,130 @@ add_filter( 'plugin_action_links_' . plugin_basename( __FILE__ ), 'innovopedia_b
 
 // Add admin menu and submenu
 function innovopedia_brief_add_admin_menu() {
-    add_menu_page(
-        'Innovopedia Brief',
-        'Innovopedia Brief',
-        'manage_options',
-        'innovopedia-brief',
-        'innovopedia_brief_admin_page',
-        'dashicons-megaphone',
-        26
-    );
-    
-    add_submenu_page(
-        'innovopedia-brief', // Parent slug
-        'Innovopedia Brief Settings',
-        'Settings',
-        'manage_options',
-        'innovopedia-brief-settings',
-        'innovopedia_brief_settings_page'
-    );
+    add_menu_page('Innovopedia Brief', 'Innovopedia Brief', 'manage_options', 'innovopedia-brief', 'innovopedia_brief_admin_page', 'dashicons-megaphone', 26);
+    add_submenu_page('innovopedia-brief', 'Innovopedia Brief Settings', 'Settings', 'manage_options', 'innovopedia-brief-settings', 'innovopedia_brief_settings_page');
 }
 add_action( 'admin_menu', 'innovopedia_brief_add_admin_menu' );
 
-// Add custom cron schedules (weekly and monthly)
+// Add custom cron schedules
 add_filter( 'cron_schedules', 'innovopedia_brief_custom_cron_schedules' );
 function innovopedia_brief_custom_cron_schedules( $schedules ) {
-    $schedules['weekly'] = array(
-        'interval' => WEEK_IN_SECONDS, // 7 days
-        'display'  => __( 'Once Weekly', 'innovopedia-brief' )
-    );
-    $schedules['monthly'] = array(
-        'interval' => MONTH_IN_SECONDS, // Approx 30 days
-        'display'  => __( 'Once Monthly', 'innovopedia-brief' )
-    );
+    if (!isset($schedules['weekly'])) {
+        $schedules['weekly'] = ['interval' => WEEK_IN_SECONDS, 'display' => __( 'Once Weekly', 'innovopedia-brief' )];
+    }
+    if (!isset($schedules['monthly'])) {
+        $schedules['monthly'] = ['interval' => MONTH_IN_SECONDS, 'display' => __( 'Once Monthly', 'innovopedia-brief' )];
+    }
     return $schedules;
 }
 
 // Function to run trend analysis via API
 function innovopedia_brief_perform_trend_analysis() {
     $options = get_option('innovopedia_brief_settings', []);
-    $api_base_url = isset($options['api_base_url']) ? $options['api_base_url'] : '';
-    $api_key = isset($options['api_key']) ? $options['api_key'] : '';
+    $api_base_url = $options['api_base_url'] ?? '';
+    $api_key = $options['api_key'] ?? '';
 
-    if (empty($api_base_url)) {
-        error_log('Innovopedia Brief: API Base URL not set for trend analysis.');
-        return;
-    }
+    if (empty($api_base_url)) return;
 
     $url = rtrim($api_base_url, '/') . '/analyze-trend';
-    $args = [
-        'headers' => [
-            'X-API-Key' => $api_key
-        ]
-    ];
+    $args = ['headers' => ['X-API-Key' => $api_key]];
     $response = wp_remote_get($url, $args);
 
     if (is_wp_error($response)) {
-        error_log('Innovopedia Brief: Error performing trend analysis: ' . $response->get_error_message());
-    } else {
-        $body = wp_remote_retrieve_body($response);
-        $http_code = wp_remote_retrieve_response_code($response);
-        if ($http_code !== 200) {
-            error_log('Innovopedia Brief: Trend analysis API returned error: ' . $http_code . ' - ' . $body);
-        }
+        error_log('Innovopedia Brief: Trend analysis error: ' . $response->get_error_message());
     }
 }
-// Hook into the custom cron events
 add_action( 'innovopedia_brief_daily_trend_analysis', 'innovopedia_brief_perform_trend_analysis' );
 add_action( 'innovopedia_brief_weekly_trend_analysis', 'innovopedia_brief_perform_trend_analysis' );
 add_action( 'innovopedia_brief_monthly_trend_analysis', 'innovopedia_brief_perform_trend_analysis' );
 
-// AJAX endpoint to update trend schedule from admin dashboard
+// AJAX endpoint to update trend schedule
 add_action( 'wp_ajax_innovopedia_brief_set_trend_schedule', function() {
-    check_ajax_referer('innovopedia_brief_admin', 'nonce'); // Use admin nonce
-    if (!current_user_can('manage_options')) {
-        wp_send_json_error(['message' => 'Permission denied.']);
-    }
+    check_ajax_referer('innovopedia_brief_admin', 'nonce');
+    if (!current_user_can('manage_options')) wp_send_json_error(['message' => 'Permission denied.']);
 
-    $schedule_type = isset($_POST['schedule']) ? sanitize_text_field($_POST['schedule']) : 'daily';
-    $valid_schedules = ['daily', 'weekly', 'monthly'];
-
-    if (!in_array($schedule_type, $valid_schedules)) {
-        wp_send_json_error(['message' => 'Invalid schedule type.']);
-    }
+    $schedule = sanitize_text_field($_POST['schedule']);
+    if (!in_array($schedule, ['daily', 'weekly', 'monthly'])) wp_send_json_error(['message' => 'Invalid schedule.']);
 
     $options = get_option('innovopedia_brief_settings', []);
-    $old_schedule = isset($options['trend_schedule']) ? $options['trend_schedule'] : 'daily';
+    $old_schedule = $options['trend_schedule'] ?? 'daily';
 
-    if ($old_schedule !== $schedule_type) {
-        // Clear all existing schedules for this plugin
-        wp_clear_scheduled_hook('innovopedia_brief_daily_trend_analysis');
-        wp_clear_scheduled_hook('innovopedia_brief_weekly_trend_analysis');
-        wp_clear_scheduled_hook('innovopedia_brief_monthly_trend_analysis');
-
-        // Schedule new event
-        if ($schedule_type === 'daily') {
-            wp_schedule_event(time(), 'daily', 'innovopedia_brief_daily_trend_analysis');
-        } elseif ($schedule_type === 'weekly') {
-            wp_schedule_event(time(), 'weekly', 'innovopedia_brief_weekly_trend_analysis');
-        } elseif ($schedule_type === 'monthly') {
-            wp_schedule_event(time(), 'monthly', 'innovopedia_brief_monthly_trend_analysis');
-        }
-
-        // Update option
-        $options['trend_schedule'] = $schedule_type;
+    if ($old_schedule !== $schedule) {
+        wp_clear_scheduled_hook("innovopedia_brief_{$old_schedule}_trend_analysis");
+        wp_schedule_event(time(), $schedule, "innovopedia_brief_{$schedule}_trend_analysis");
+        $options['trend_schedule'] = $schedule;
         update_option('innovopedia_brief_settings', $options);
     }
-
-    wp_send_json_success(['message' => 'Trend analysis schedule updated to ' . $schedule_type . '.']);
+    wp_send_json_success(['message' => 'Schedule updated to ' . $schedule . '.']);
 });
 
-// AJAX endpoint to get current trend schedule for admin dashboard
+// AJAX endpoint to get current trend schedule
 add_action( 'wp_ajax_innovopedia_brief_get_trend_schedule', function() {
-    // No nonce check here as it's just reading a public setting, but could add if preferred
-    if (!current_user_can('manage_options')) {
-        wp_send_json_error(['message' => 'Permission denied.']);
-    }
-
+    if (!current_user_can('manage_options')) wp_send_json_error(['message' => 'Permission denied.']);
     $options = get_option('innovopedia_brief_settings', []);
-    $current_schedule = isset($options['trend_schedule']) ? $options['trend_schedule'] : 'daily';
-    wp_send_json_success(['schedule' => $current_schedule]);
+    wp_send_json_success(['schedule' => $options['trend_schedule'] ?? 'daily']);
 });
 
-// AJAX endpoint to train AI on website content
+// Helper function for proxied GET requests
+function innovopedia_brief_proxy_get_request($endpoint) {
+    check_ajax_referer('innovopedia_brief_admin', 'nonce');
+    if (!current_user_can('manage_options')) wp_send_json_error(['message' => 'Permission denied.']);
+    
+    $options = get_option('innovopedia_brief_settings', []);
+    $api_base_url = $options['api_base_url'] ?? '';
+    $api_key = $options['api_key'] ?? '';
+
+    if (empty($api_base_url)) wp_send_json_error(['message' => 'API Base URL not set.']);
+
+    $url = rtrim($api_base_url, '/') . $endpoint;
+    $args = ['headers' => ['X-API-Key' => $api_key]];
+    $response = wp_remote_get($url, $args);
+
+    if (is_wp_error($response)) wp_send_json_error(['message' => $response->get_error_message()]);
+    
+    $body = wp_remote_retrieve_body($response);
+    $http_code = wp_remote_retrieve_response_code($response);
+
+    if ($http_code >= 200 && $http_code < 300) {
+        wp_send_json_success(json_decode($body));
+    } else {
+        wp_send_json_error(['message' => "API Error ($http_code): $body"]);
+    }
+}
+
+// AJAX endpoints for dashboard data
+add_action('wp_ajax_innovopedia_brief_get_feedback', fn() => innovopedia_brief_proxy_get_request('/admin-feedback-list'));
+add_action('wp_ajax_innovopedia_brief_get_questions', fn() => innovopedia_brief_proxy_get_request('/admin-questions-list'));
+add_action('wp_ajax_innovopedia_brief_get_moderation', fn() => innovopedia_brief_proxy_get_request('/admin-moderation'));
+
+// AJAX endpoint to train AI
 add_action( 'wp_ajax_innovopedia_brief_train_ai', function() {
     check_ajax_referer('innovopedia_brief_admin', 'nonce');
-    if (!current_user_can('manage_options')) {
-        wp_send_json_error(['message' => 'Permission denied.']);
-    }
+    if (!current_user_can('manage_options')) wp_send_json_error(['message' => 'Permission denied.']);
 
     $options = get_option('innovopedia_brief_settings', []);
-    $api_base_url = isset($options['api_base_url']) ? $options['api_base_url'] : '';
-    $api_key = isset($options['api_key']) ? $options['api_key'] : '';
+    $api_base_url = $options['api_base_url'] ?? '';
+    $api_key = $options['api_key'] ?? '';
 
-    if (empty($api_base_url)) {
-        wp_send_json_error(['message' => 'API Base URL not set in plugin settings.']);
-    }
+    if (empty($api_base_url)) wp_send_json_error(['message' => 'API Base URL not set.']);
 
-    $train_url = rtrim($api_base_url, '/') . '/admin-train-ai';
-    
+    $url = rtrim($api_base_url, '/') . '/admin-train-ai';
     $args = [
         'method'    => 'POST',
-        'headers'   => [
-            'Content-Type' => 'application/json',
-            'X-API-Key' => $api_key // Pass API Key in header
-        ],
+        'headers'   => ['Content-Type' => 'application/json', 'X-API-Key' => $api_key],
         'body'      => json_encode(['action' => 'train', 'source' => 'website_content']),
-        'timeout'   => 60, // Increase timeout for potentially long training process
+        'timeout'   => 60,
     ];
+    $response = wp_remote_post($url, $args);
 
-    $response = wp_remote_post($train_url, $args);
-
-    if (is_wp_error($response)) {
-        wp_send_json_error(['message' => 'Error training AI: ' . $response->get_error_message()]);
-    }
+    if (is_wp_error($response)) wp_send_json_error(['message' => $response->get_error_message()]);
 
     $body = wp_remote_retrieve_body($response);
     $http_code = wp_remote_retrieve_response_code($response);
-
-    if ($http_code === 200) {
-        wp_send_json_success(['message' => 'AI training initiated successfully.', 'response' => json_decode($body)]);
-    } else {
-        wp_send_json_error(['message' => 'AI training failed with status ' . $http_code . ': ' . $body]);
-    }
-});
-
-// AJAX endpoint to get user feedback list
-add_action( 'wp_ajax_innovopedia_brief_get_feedback', function() {
-    check_ajax_referer('innovopedia_brief_admin', 'nonce');
-    if (!current_user_can('manage_options')) {
-        wp_send_json_error(['message' => 'Permission denied.']);
-    }
-
-    $options = get_option('innovopedia_brief_settings', []);
-    $api_base_url = isset($options['api_base_url']) ? $options['api_base_url'] : '';
-    $api_key = isset($options['api_key']) ? $options['api_key'] : '';
-
-    if (empty($api_base_url)) {
-        wp_send_json_error(['message' => 'API Base URL not set in plugin settings.']);
-    }
-
-    $url = rtrim($api_base_url, '/') . '/admin-feedback-list'; // New endpoint for list
-    $args = [
-        'headers' => [
-            'X-API-Key' => $api_key
-        ]
-    ];
-    $response = wp_remote_get($url, $args);
-
-    if (is_wp_error($response)) {
-        wp_send_json_error(['message' => 'Error fetching feedback: ' . $response->get_error_message()]);
-    }
-
-    $body = wp_remote_retrieve_body($response);
-    $http_code = wp_remote_retrieve_response_code($response);
-
+    
     if ($http_code === 200) {
         wp_send_json_success(json_decode($body));
     } else {
-        wp_send_json_error(['message' => 'Failed to fetch feedback with status ' . $http_code . ': ' . $body]);
-    }
-});
-
-// AJAX endpoint to get user questions list
-add_action( 'wp_ajax_innovopedia_brief_get_questions', function() {
-    check_ajax_referer('innovopedia_brief_admin', 'nonce');
-    if (!current_user_can('manage_options')) {
-        wp_send_json_error(['message' => 'Permission denied.']);
-    }
-
-    $options = get_option('innovopedia_brief_settings', []);
-    $api_base_url = isset($options['api_base_url']) ? $options['api_base_url'] : '';
-    $api_key = isset($options['api_key']) ? $options['api_key'] : '';
-
-    if (empty($api_base_url)) {
-        wp_send_json_error(['message' => 'API Base URL not set in plugin settings.']);
-    }
-
-    $url = rtrim($api_base_url, '/') . '/admin-questions-list'; // New endpoint for list
-    $args = [
-        'headers' => [
-            'X-API-Key' => $api_key
-        ]
-    ];
-    $response = wp_remote_get($url, $args);
-
-    if (is_wp_error($response)) {
-        wp_send_json_error(['message' => 'Error fetching questions: ' . $response->get_error_message()]);
-    }
-
-    $body = wp_remote_retrieve_body($response);
-    $http_code = wp_remote_retrieve_response_code($response);
-
-    if ($http_code === 200) {
-        wp_send_json_success(json_decode($body));
-    } else {
-        wp_send_json_error(['message' => 'Failed to fetch questions with status ' . $http_code . ': ' . $body]);
+        wp_send_json_error(['message' => "API Error ($http_code): $body"]);
     }
 });

@@ -1,9 +1,7 @@
-
-/* frontend/assets/brief.css */
-
-/* Pill-shaped button */
-#innovopedia-brief-shortcode-root {
-    display: inline-block; /* To make the button respect its width */
+:root {
+    --innovopedia-primary-color: #00bcd4;
+    --innovopedia-secondary-color: #4CAF50;
+    --innovopedia-border-radius: 15px;
 }
 
 #innovopedia-brief-button {
@@ -11,333 +9,152 @@
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
     border: 1px solid rgba(255, 255, 255, 0.18);
-    border-radius: 50px; /* Pill shape */
+    border-radius: 50px;
     padding: 10px 20px;
     color: #fff;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     font-size: 16px;
-    font-weight: 600;
     cursor: pointer;
-    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
     transition: all 0.3s ease;
-    display: flex;
+    display: inline-flex;
     align-items: center;
     gap: 8px;
-    text-decoration: none; /* In case it's an <a> */
 }
 
 #innovopedia-brief-button:hover {
     background: linear-gradient(135deg, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.1));
-    box-shadow: 0 6px 40px rgba(0, 0, 0, 0.15);
 }
 
-#innovopedia-brief-button i {
-    color: #fff; /* Icon color */
-}
-
-/* Popup/Slide Styles */
 .innovopedia-brief-overlay {
     position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.5); /* Semi-transparent overlay */
-    backdrop-filter: blur(5px); /* Blur behind the popup */
-    -webkit-backdrop-filter: blur(5px);
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(5px);
     display: flex;
-    justify-content: flex-end; /* Align to the right */
-    align-items: center;
-    z-index: 99999; /* High z-index to be on top */
+    justify-content: flex-end;
+    z-index: 99999;
     opacity: 0;
     visibility: hidden;
-    transition: opacity 0.3s ease, visibility 0.3s ease;
+    transition: opacity 0.3s ease, visibility 0s 0.3s;
 }
 
 .innovopedia-brief-overlay.active {
     opacity: 1;
     visibility: visible;
+    transition-delay: 0s;
 }
 
 .innovopedia-brief-popup {
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.02));
+    background: linear-gradient(135deg, rgba(30,30,30,0.7), rgba(0,0,0,0.5));
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.18);
-    border-radius: 15px;
+    border-left: 1px solid rgba(255, 255, 255, 0.2);
     box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-    width: 90%;
-    max-width: 450px; /* Standard brief width */
+    width: 95%;
+    max-width: 450px;
     height: 100%;
-    max-height: 100vh; /* Full height on smaller screens */
-    margin-right: 0; /* Align to right edge */
-    transform: translateX(100%); /* Start off-screen to the right */
-    transition: transform 0.3s ease;
+    transform: translateX(100%);
+    transition: transform 0.3s ease-out;
     display: flex;
     flex-direction: column;
-    padding: 20px;
-    box-sizing: border-box; /* Include padding in width/height */
     color: #f0f0f0;
-    position: relative; /* For close button positioning */
+    border-radius: var(--innovopedia-border-radius) 0 0 var(--innovopedia-border-radius);
 }
 
 .innovopedia-brief-overlay.active .innovopedia-brief-popup {
-    transform: translateX(0); /* Slide in */
-}
-
-/* Responsive adjustments */
-@media (max-width: 768px) {
-    .innovopedia-brief-popup {
-        width: 100%; /* Full width on small screens */
-        border-radius: 0; /* No border-radius on sides */
-    }
+    transform: translateX(0);
 }
 
 .innovopedia-brief-header {
+    padding: 15px 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding-bottom: 15px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    margin-bottom: 15px;
 }
-
-.innovopedia-brief-header h2 {
-    margin: 0;
-    color: #fff;
-    font-size: 24px;
-    font-weight: 700;
-}
+.innovopedia-brief-header h2 { margin: 0; font-size: 1.5em; }
 
 .innovopedia-brief-close {
-    background: none;
-    border: none;
-    font-size: 28px;
-    color: #fff;
-    cursor: pointer;
-    padding: 5px;
-    border-radius: 50%;
-    transition: background 0.2s ease;
-}
-
-.innovopedia-brief-close:hover {
-    background: rgba(255, 255, 255, 0.1);
+    background: none; border: none; font-size: 28px; color: #fff; cursor: pointer;
 }
 
 .innovopedia-brief-content {
-    flex-grow: 1; /* Take up available space */
-    overflow-y: auto; /* Scrollable content */
-    padding-right: 10px; /* Space for scrollbar */
-    font-size: 15px;
-    line-height: 1.6;
+    flex-grow: 1;
+    overflow-y: auto;
+    padding: 20px;
 }
+.innovopedia-brief-content::-webkit-scrollbar { width: 5px; }
+.innovopedia-brief-content::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.2); border-radius: 10px; }
 
-.innovopedia-brief-content::-webkit-scrollbar {
-    width: 8px;
-}
-
-.innovopedia-brief-content::-webkit-scrollbar-track {
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 10px;
-}
-
-.innovopedia-brief-content::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 10px;
-}
-
-.innovopedia-brief-content::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.3);
-}
-
-.innovopedia-brief-content h3 {
-    color: #fff;
-    font-size: 18px;
-    margin-top: 20px;
-    margin-bottom: 10px;
-}
-
-.innovopedia-brief-content p {
-    margin-bottom: 10px;
-    color: #e0e0e0;
-}
-
-.innovopedia-brief-content ul {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-}
-
-.innovopedia-brief-content ul li {
-    background: rgba(255, 255, 255, 0.08);
-    padding: 10px 15px;
-    margin-bottom: 8px;
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    transition: background 0.2s ease;
-}
-
-.innovopedia-brief-content ul li:hover {
-    background: rgba(255, 255, 255, 0.15);
-}
-
-.innovopedia-brief-content ul li .icon {
-    color: #00bcd4; /* Accent color for icons */
-}
-
-.innovopedia-brief-content .ai-notice {
-    font-style: italic;
-    font-size: 13px;
-    color: rgba(255, 255, 255, 0.7);
-    margin-top: 20px;
-    padding-top: 10px;
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-/* Loading state */
-.innovopedia-brief-loading {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    height: 100%;
-    color: #fff;
-    font-size: 18px;
-}
-
-.innovopedia-brief-loading .spinner {
-    border: 4px solid rgba(255, 255, 255, 0.3);
-    border-top: 4px solid #fff;
-    border-radius: 50%;
-    width: 30px;
-    height: 30px;
-    animation: spin 1s linear infinite;
-    margin-bottom: 15px;
-}
-
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
-
-/* Topic filtering */
 .innovopedia-brief-topics {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin-bottom: 15px;
-    padding-bottom: 10px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 15px;
 }
-
 .innovopedia-brief-topic-button {
     background: rgba(255, 255, 255, 0.1);
     border: 1px solid rgba(255, 255, 255, 0.2);
-    color: #fff;
-    padding: 6px 12px;
-    border-radius: 20px;
-    font-size: 14px;
-    cursor: pointer;
+    color: #fff; padding: 6px 12px; border-radius: 20px; cursor: pointer;
     transition: all 0.2s ease;
-    white-space: nowrap; /* Prevent wrapping */
 }
-
-.innovopedia-brief-topic-button:hover {
-    background: rgba(255, 255, 255, 0.2);
-}
-
 .innovopedia-brief-topic-button.active {
-    background: #00bcd4; /* Accent color for active topic */
-    border-color: #00bcd4;
+    background-color: var(--innovopedia-primary-color);
+    border-color: var(--innovopedia-primary-color);
     font-weight: bold;
 }
 
-/* Audio Player */
-.innovopedia-brief-audio {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-top: 20px;
-    padding-top: 15px;
+.story-item, .extra-story-item {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 15px;
+    border-radius: var(--innovopedia-border-radius);
+    margin-bottom: 12px;
+    border: 1px solid rgba(255,255,255,0.1);
+}
+.story-item h3, .extra-story-item h3 { margin: 0 0 8px; font-size: 1.1em; color: #fff; }
+.story-item p, .extra-story-item p { margin: 0; color: #e0e0e0; font-size: 0.95em; }
+
+.innovopedia-brief-extras-section { margin-top: 30px; }
+.innovopedia-brief-extras-section h2 {
+    font-size: 1.3em;
+    padding-bottom: 10px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    margin-bottom: 15px;
+}
+
+.innovopedia-brief-footer {
+    padding: 20px;
     border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.innovopedia-brief-audio button {
-    background: #00bcd4;
-    border: none;
-    color: #fff;
-    padding: 8px 12px;
-    border-radius: 50px;
-    cursor: pointer;
-    font-size: 16px;
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    transition: background 0.2s ease;
-}
-
-.innovopedia-brief-audio button:hover {
-    background: #0097a7;
-}
-
-.innovopedia-brief-audio audio {
-    flex-grow: 1;
-    width: 100%; /* For full width within its container */
-    filter: invert(1) hue-rotate(180deg); /* Style default audio player for dark theme */
-}
-
-/* Feedback Form */
-.innovopedia-brief-feedback-form {
-    margin-top: 20px;
-    padding-top: 15px;
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.innovopedia-brief-feedback-form label {
-    display: block;
-    margin-bottom: 8px;
-    color: #fff;
-}
+.innovopedia-brief-audio, .innovopedia-brief-feedback-form { margin-bottom: 15px; }
 
 .innovopedia-brief-feedback-form textarea {
-    width: 100%;
-    padding: 10px;
-    margin-bottom: 10px;
-    border-radius: 8px;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    background: rgba(255, 255, 255, 0.08);
-    color: #fff;
-    font-family: inherit;
-    font-size: 14px;
-    box-sizing: border-box;
-    resize: vertical; /* Allow vertical resizing */
-    min-height: 80px;
+    width: 100%; padding: 10px; border-radius: var(--innovopedia-border-radius);
+    border: 1px solid rgba(255, 255, 255, 0.2); background: rgba(0,0,0, 0.2);
+    color: #fff; min-height: 80px; box-sizing: border-box;
 }
 
-.innovopedia-brief-feedback-form textarea::placeholder {
-    color: rgba(255, 255, 255, 0.6);
+.innovopedia-brief-button-primary {
+    background-color: var(--innovopedia-primary-color);
+    color: #fff; padding: 10px 15px; border-radius: 50px; border: none; cursor: pointer;
+    display: inline-flex; align-items: center; gap: 8px; transition: background-color 0.2s;
+}
+.innovopedia-brief-button-primary:hover { background-color: color-mix(in srgb, var(--innovopedia-primary-color), #000 10%); }
+
+.innovopedia-brief-button-secondary {
+    background-color: var(--innovopedia-secondary-color);
+    /* ... other styles similar to primary */
 }
 
-.innovopedia-brief-feedback-form button {
-    background: #4CAF50; /* Green submit button */
-    border: none;
-    color: white;
-    padding: 10px 20px;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 16px;
-    transition: background 0.2s ease;
-}
+.ai-notice { font-style: italic; font-size: 0.8em; color: #aaa; text-align: center; }
 
-.innovopedia-brief-feedback-form button:hover {
-    background: #45a049;
+/* Loading Spinner */
+.innovopedia-brief-loading { text-align: center; padding: 50px; }
+.spinner {
+    border: 4px solid rgba(255, 255, 255, 0.3);
+    border-top: 4px solid #fff;
+    border-radius: 50%;
+    width: 40px; height: 40px;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 15px;
 }
-
-.innovopedia-brief-feedback-message {
-    margin-top: 10px;
-    font-size: 14px;
-    color: #d4edda; /* Light green for success */
-}
+@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
