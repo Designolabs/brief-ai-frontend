@@ -261,11 +261,11 @@ function innovopedia_brief_proxy_admin_get_request($endpoint) {
 }
 
 // AJAX endpoints for dashboard data
-add_action('wp_ajax_innovopedia_brief_analytics', fn() => innovopedia_brief_proxy_admin_get_request('/admin-stats'));
-add_action('wp_ajax_innovopedia_brief_get_feedback', fn() => innovopedia_brief_proxy_admin_get_request('/admin-feedback-list'));
-add_action('wp_ajax_innovopedia_brief_get_questions', fn() => innovopedia_brief_proxy_admin_get_request('/admin-questions-list'));
-add_action('wp_ajax_innovopedia_brief_get_moderation', fn() => innovopedia_brief_proxy_admin_get_request('/admin-moderation'));
-add_action('wp_ajax_innovopedia_brief_analyze_trend', fn() => innovopedia_brief_proxy_admin_get_request('/analyze-trend'));
+add_action('wp_ajax_innovopedia_brief_analytics', function() { return innovopedia_brief_proxy_admin_get_request('/admin-stats'); });
+add_action('wp_ajax_innovopedia_brief_get_feedback', function() { return innovopedia_brief_proxy_admin_get_request('/admin-feedback-list'); });
+add_action('wp_ajax_innovopedia_brief_get_questions', function() { return innovopedia_brief_proxy_admin_get_request('/admin-questions-list'); });
+add_action('wp_ajax_innovopedia_brief_get_moderation', function() { return innovopedia_brief_proxy_admin_get_request('/admin-moderation'); });
+add_action('wp_ajax_innovopedia_brief_analyze_trend', function() { return innovopedia_brief_proxy_admin_get_request('/analyze-trend'); });
 
 // AJAX endpoint to train AI
 add_action( 'wp_ajax_innovopedia_brief_train_ai', function() {
