@@ -16,7 +16,9 @@ function innovopedia_brief_settings_page() {
             $options = get_option('innovopedia_brief_settings', []);
             
             // Helper to get option value or default
-            $opt = fn($key, $default) => esc_attr($options[$key] ?? $default);
+            $opt = function($key, $default) use ($options) {
+                return esc_attr($options[$key] ?? $default);
+            };
             ?>
             
             <h2>API & Caching</h2>
