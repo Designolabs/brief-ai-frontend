@@ -4,6 +4,13 @@
     --innovopedia-border-radius: 15px;
 }
 
+/* Apply dynamic CSS variables from JS */
+.innovopedia-brief-popup {
+    --dynamic-primary-color: var(--innovopedia-primary-color);
+    --dynamic-secondary-color: var(--innovopedia-secondary-color);
+    --dynamic-border-radius: var(--innovopedia-border-radius);
+}
+
 #innovopedia-brief-button {
     background: linear-gradient(135deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.05));
     backdrop-filter: blur(10px);
@@ -59,7 +66,7 @@
     display: flex;
     flex-direction: column;
     color: #f0f0f0;
-    border-radius: var(--innovopedia-border-radius) 0 0 var(--innovopedia-border-radius);
+    border-radius: var(--dynamic-border-radius) 0 0 var(--dynamic-border-radius);
 }
 
 .innovopedia-brief-overlay.active .innovopedia-brief-popup {
@@ -97,15 +104,15 @@
     transition: all 0.2s ease;
 }
 .innovopedia-brief-topic-button.active {
-    background-color: var(--innovopedia-primary-color);
-    border-color: var(--innovopedia-primary-color);
+    background-color: var(--dynamic-primary-color);
+    border-color: var(--dynamic-primary-color);
     font-weight: bold;
 }
 
 .story-item, .extra-story-item {
     background: rgba(255, 255, 255, 0.05);
     padding: 15px;
-    border-radius: var(--innovopedia-border-radius);
+    border-radius: var(--dynamic-border-radius);
     margin-bottom: 12px;
     border: 1px solid rgba(255,255,255,0.1);
 }
@@ -128,21 +135,44 @@
 .innovopedia-brief-audio, .innovopedia-brief-feedback-form { margin-bottom: 15px; }
 
 .innovopedia-brief-feedback-form textarea {
-    width: 100%; padding: 10px; border-radius: var(--innovopedia-border-radius);
+    width: 100%; padding: 10px; border-radius: var(--dynamic-border-radius);
     border: 1px solid rgba(255, 255, 255, 0.2); background: rgba(0,0,0, 0.2);
     color: #fff; min-height: 80px; box-sizing: border-box;
 }
 
 .innovopedia-brief-button-primary {
-    background-color: var(--innovopedia-primary-color);
+    background-color: var(--dynamic-primary-color);
     color: #fff; padding: 10px 15px; border-radius: 50px; border: none; cursor: pointer;
     display: inline-flex; align-items: center; gap: 8px; transition: background-color 0.2s;
 }
-.innovopedia-brief-button-primary:hover { background-color: color-mix(in srgb, var(--innovopedia-primary-color), #000 10%); }
+.innovopedia-brief-button-primary:hover { background-color: color-mix(in srgb, var(--dynamic-primary-color), #000 10%); }
 
 .innovopedia-brief-button-secondary {
-    background-color: var(--innovopedia-secondary-color);
-    /* ... other styles similar to primary */
+    background-color: var(--dynamic-secondary-color);
+    color: #fff; padding: 10px 15px; border-radius: 50px; border: none; cursor: pointer;
+    display: inline-flex; align-items: center; gap: 8px; transition: background-color 0.2s;
+}
+.innovopedia-brief-button-secondary:hover { background-color: color-mix(in srgb, var(--dynamic-secondary-color), #000 10%); }
+
+/* Story Likes */
+.story-like-button {
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.2);
+    color: #fff;
+    padding: 5px 10px;
+    border-radius: 15px;
+    font-size: 0.8em;
+    cursor: pointer;
+    transition: background-color 0.2s, border-color 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    margin-top: 8px;
+}
+.story-like-button:hover { background-color: rgba(255,255,255,0.2); }
+.story-like-button.liked {
+    background-color: var(--dynamic-primary-color);
+    border-color: var(--dynamic-primary-color);
 }
 
 .ai-notice { font-style: italic; font-size: 0.8em; color: #aaa; text-align: center; }
@@ -158,3 +188,10 @@
     margin: 0 auto 15px;
 }
 @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+@media (max-width: 768px) {
+    .innovopedia-brief-popup {
+        width: 100%;
+        border-radius: 0;
+    }
+}

@@ -1,14 +1,15 @@
 jQuery(document).ready(function($) {
-    const { apiBaseUrl, apiKey, colors, borderRadius } = InnovopediaBrief;
+    const { apiBaseUrl, apiKey, colors, borderRadius, ajaxUrl, nonce } = InnovopediaBrief;
     if (!$('#innovopedia-brief-shortcode-root').length) return;
 
     // --- HTML Templates ---
-    const getPopupHTML = () => `
+    const getPopupHTML = (buttonText, buttonIcon) => `
+        <button id="innovopedia-brief-button" aria-label="Open your daily briefing"><i class="${buttonIcon}"></i> ${buttonText}</button>
         <div class="innovopedia-brief-overlay" role="dialog" aria-modal="true" aria-labelledby="briefing-title">
             <div class="innovopedia-brief-popup" tabindex="-1">
                 <div class="innovopedia-brief-header">
                     <h2 id="briefing-title">Your Daily Briefing</h2>
-                    <button class="innovopedia-brief-close" aria-label="Close briefing">&times;</button>
+                    <button class="innovopedia-brief-close" aria-label="Close briefing"><i class="fas fa-times"></i></button>
                 </div>
                 <div class="innovopedia-brief-content">
                     <div class="innovopedia-brief-loading"><div class="spinner"></div><p>Fetching your briefing...</p></div>
@@ -21,15 +22,30 @@ jQuery(document).ready(function($) {
             </div>
         </div>`;
     
-    const getStoryHTML = (story) => `<div class="story-item"><h3>${story.title}</h3><p>${story.summary}</p></div>`;
-    const getExtraStoryHTML = (story) => `<div class="extra-story-item"><h3>${story.title}</h3><p>${story.summary}</p></div>`;
+    const getStoryHTML = (story) => `
+        <div class="story-item" data-story-id="${story.id}">
+            <h3>${story.title}</h3>
+            <p>${story.summary}</p>
+            ${story.url ? `<p><a href="${story.url}" target="_blank">Read More</a></p>` : ''}
+            <button class="story-like-button" data-id="${story.id}"><i class="fas fa-heart"></i> Like</button>
+        </div>`;
+    
+    const getExtraStoryHTML = (story) => `
+        <div class="extra-story-item">
+            <h3>${story.title}</h3>
+            <p>${story.summary}</p>
+            ${story.url ? `<p><a href="${story.url}" target="_blank">Read More</a></p>` : ''}
+        </div>`;
     
     // --- App State & Core Functions ---
-    let $popup, $overlay, currentBriefingData = null;
+    let $popup, $overlay, $button, currentBriefingData = null;
 
     const init = () => {
-        $('#innovopedia-brief-shortcode-root').html('<button id="innovopedia-brief-button"><i class="fas fa-newspaper"></i> Your Briefing</button>');
-        $('body').append(getPopupHTML());
+        const initialButtonText = InnovopediaBrief.briefingButtonText || 'Your Briefing';
+        const initialButtonIcon = InnovopediaBrief.briefingButtonIcon || 'fas fa-newspaper';
+
+        $('#innovopedia-brief-shortcode-root').html(getPopupHTML(initialButtonText, initialButtonIcon));
+        $button = $('#innovopedia-brief-button');
         $overlay = $('.innovopedia-brief-overlay');
         $popup = $('.innovopedia-brief-popup');
         applyCustomStyles();
@@ -42,21 +58,29 @@ jQuery(document).ready(function($) {
             '--innovopedia-secondary-color': colors.secondary,
             '--innovopedia-border-radius': borderRadius
         });
+
+        // Update main button if it uses global colors
+        $button.css({
+            'background': `linear-gradient(135deg, ${colors.primary}B3, ${colors.primary}66)`,
+            'border-color': `${colors.primary}2E`
+        });
     };
 
     const openPopup = async () => {
         $overlay.addClass('active');
         $popup.focus();
         $('body').css('overflow', 'hidden');
+        
         if (currentBriefingData) return; // Don't re-fetch if data exists
 
         try {
-            const response = await fetch(`${apiBaseUrl}/get-briefing-advanced`, { headers: { 'X-API-Key': apiKey } });
-            if (!response.ok) throw new Error(`API Error: ${response.statusText}`);
-            currentBriefingData = await response.json();
+            // Use AJAX proxy for cached data
+            const response = await $.post(ajaxUrl, { action: 'innovopedia_brief_get_data', nonce: nonce });
+            if (!response.success) throw new Error(response.data.message || 'Failed to fetch briefing');
+            currentBriefingData = response.data;
             renderBriefing(currentBriefingData);
         } catch (error) {
-            $('.innovopedia-brief-content').html(`<p style="color:red;padding:20px;">${error.message}</p>`);
+            $('.innovopedia-brief-content').html(`<p style="color:red;padding:20px;">Error: ${error.message}</p>`);
         }
     };
 
@@ -75,8 +99,8 @@ jQuery(document).ready(function($) {
             <div class="innovopedia-brief-topics">${renderTopics(data.topics)}</div>
             <div class="innovopedia-brief-stories">${data.stories.map(getStoryHTML).join('')}</div>
             <div class="innovopedia-brief-extras">
-                ${data.up_next ? renderExtrasSection('Up Next', data.up_next) : ''}
-                ${data.popular_stories ? renderExtrasSection('Popular Stories', data.popular_stories) : ''}
+                ${data.up_next && data.up_next.length ? renderExtrasSection('Up Next', data.up_next) : ''}
+                ${data.popular_stories && data.popular_stories.length ? renderExtrasSection('Popular Stories', data.popular_stories) : ''}
             </div>`;
         $('.innovopedia-brief-content').html(contentHtml);
         renderFooter();
@@ -99,13 +123,13 @@ jQuery(document).ready(function($) {
         $('.innovopedia-brief-feedback-form').html(`
             <h3>Give Us Feedback</h3>
             <textarea id="innovopedia-feedback-text" placeholder="What do you think of this briefing? Any questions?"></textarea>
-            <button class="innovopedia-brief-button-primary" style="background-color: var(--innovopedia-secondary-color);" id="innovopedia-submit-feedback">Submit Feedback</button>
+            <button class="innovopedia-brief-button-secondary" id="innovopedia-submit-feedback">Submit Feedback</button>
             <div class="innovopedia-brief-feedback-message"></div>`);
     };
 
     // --- Event Handling ---
     const attachEventListeners = () => {
-        $('#innovopedia-brief-button').on('click', openPopup);
+        $button.on('click', openPopup);
         $popup.on('click', '.innovopedia-brief-close', closePopup);
         $overlay.on('click', (e) => e.target === $overlay[0] && closePopup());
         $(document).on('keydown', (e) => e.key === 'Escape' && $overlay.hasClass('active') && closePopup());
@@ -157,6 +181,24 @@ jQuery(document).ready(function($) {
                     $btn.prop('disabled', false);
                     $message.text('').attr('style', '');
                 }, 3000);
+            }
+        });
+
+        // Story Like Button
+        $popup.on('click', '.story-like-button', async function() {
+            const $btn = $(this);
+            const storyId = $btn.data('id');
+            if ($btn.hasClass('liked')) return; // Prevent multiple likes
+
+            try {
+                const response = await $.post(ajaxUrl, { action: 'innovopedia_brief_like_story', nonce: nonce, story_id: storyId });
+                if (response.success) {
+                    $btn.addClass('liked').html('<i class="fas fa-heart"></i> Liked').prop('disabled', true);
+                } else {
+                    alert(response.data.message || 'Failed to like story.');
+                }
+            } catch (error) {
+                alert('Error sending like.');
             }
         });
     };

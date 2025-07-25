@@ -25,7 +25,9 @@ function innovopedia_brief_activate() {
     $defaults = [
         'api_base_url' => '', 'api_key' => '', 'primary_color' => '#00bcd4',
         'secondary_color' => '#4CAF50', 'border_radius' => '15px', 'trend_schedule' => 'daily',
-        'content_sources' => ['post', 'page'], 'cache_duration' => 5
+        'content_sources' => ['post', 'page'], 'cache_duration' => 5,
+        'briefing_button_text' => 'Your Briefing',
+        'briefing_button_icon' => 'fas fa-newspaper',
     ];
     add_option('innovopedia_brief_settings', $defaults, '', 'yes');
     if (!wp_next_scheduled('innovopedia_brief_daily_trend_analysis')) {
@@ -47,7 +49,36 @@ function innovopedia_brief_add_admin_menu() {
     add_submenu_page('innovopedia-brief', 'Settings', 'Settings', 'manage_options', 'innovopedia-brief-settings', 'innovopedia_brief_settings_page');
 }
 
+// --- Cron Schedules ---
+add_filter( 'cron_schedules', 'innovopedia_brief_custom_cron_schedules' );
+function innovopedia_brief_custom_cron_schedules( $schedules ) {
+    if (!isset($schedules['weekly'])) {
+        $schedules['weekly'] = ['interval' => WEEK_IN_SECONDS, 'display' => __( 'Once Weekly', 'innovopedia-brief' )];
+    }
+    if (!isset($schedules['monthly'])) {
+        $schedules['monthly'] = ['interval' => MONTH_IN_SECONDS, 'display' => __( 'Once Monthly', 'innovopedia-brief' )];
+    }
+    return $schedules;
+}
+
+// Function to run trend analysis via API
+function innovopedia_brief_perform_trend_analysis() {
+    $options = get_option('innovopedia_brief_settings', []);
+    $api_base_url = $options['api_base_url'] ?? '';
+    $api_key = $options['api_key'] ?? '';
+
+    if (empty($api_base_url)) return;
+
+    $url = rtrim($api_base_url, '/') . '/analyze-trend';
+    $args = ['headers' => ['X-API-Key' => $api_key]];
+    wp_remote_get($url, $args);
+}
+add_action( 'innovopedia_brief_daily_trend_analysis', 'innovopedia_brief_perform_trend_analysis' );
+add_action( 'innovopedia_brief_weekly_trend_analysis', 'innovopedia_brief_perform_trend_analysis' );
+add_action( 'innovopedia_brief_monthly_trend_analysis', 'innovopedia_brief_perform_trend_analysis' );
+
 // --- AJAX Endpoints ---
+
 // Briefing Data with Caching (for frontend)
 add_action('wp_ajax_nopriv_innovopedia_brief_get_data', 'innovopedia_brief_get_data_with_caching');
 add_action('wp_ajax_innovopedia_brief_get_data', 'innovopedia_brief_get_data_with_caching');
@@ -72,8 +103,13 @@ function innovopedia_brief_get_data_with_caching() {
         wp_send_json_error(['message' => $response->get_error_message()]);
     } else {
         $body = wp_remote_retrieve_body($response);
-        set_transient($transient_key, $body, $cache_duration);
-        wp_send_json_success(json_decode($body));
+        $http_code = wp_remote_retrieve_response_code($response);
+        if ($http_code >= 200 && $http_code < 300) {
+            set_transient($transient_key, $body, $cache_duration);
+            wp_send_json_success(json_decode($body));
+        } else {
+            wp_send_json_error(['message' => "API Error ($http_code): $body"]);
+        }
     }
 }
 
@@ -95,8 +131,18 @@ function innovopedia_brief_like_story_handler() {
         'headers' => ['Content-Type' => 'application/json', 'X-API-Key' => $api_key],
         'body' => json_encode(['story_id' => $story_id, 'action' => 'like']),
     ];
-    wp_remote_post($url, $args); // Fire and forget
-    wp_send_json_success();
+    $response = wp_remote_post($url, $args); 
+    
+    if (is_wp_error($response)) {
+        wp_send_json_error(['message' => 'Error sending like: ' . $response->get_error_message()]);
+    } else {
+        $http_code = wp_remote_retrieve_response_code($response);
+        if ($http_code >= 200 && $http_code < 300) {
+            wp_send_json_success(['message' => 'Story liked!']);
+        } else {
+            wp_send_json_error(['message' => "API Error ($http_code): " . wp_remote_retrieve_body($response)]);
+        }
+    }
 }
 
 // Send Email Summary
@@ -116,15 +162,45 @@ add_action('wp_ajax_innovopedia_brief_send_email_summary', function() {
     $data = json_decode($briefing_data_json, true);
     $subject = get_bloginfo('name') . ' - Daily Briefing';
     $headers = ['Content-Type: text/html; charset=UTF-8'];
-    $body = '<h1>' . esc_html($data['greeting']) . '</h1>';
+    
+    $body = '<div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">';
+    $body .= '<h1>' . esc_html($data['greeting']) . '</h1>';
     $body .= '<p>' . esc_html($data['intro']) . '</p>';
+    $body .= '<hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">';
+    $body .= '<h2>Today's Stories:</h2>';
     foreach($data['stories'] as $story) {
-        $body .= '<h2>' . esc_html($story['title']) . '</h2>';
+        $body .= '<div style="margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px dashed #f0f0f0;">';
+        $body .= '<h3>' . esc_html($story['title']) . '</h3>';
         $body .= '<p>' . esc_html($story['summary']) . '</p>';
+        if (!empty($story['url'])) {
+            $body .= '<p><a href="' . esc_url($story['url']) . '">Read More</a></p>';
+        }
+        $body .= '</div>';
     }
+    
+    if (!empty($data['up_next'])) {
+        $body .= '<h2 style="margin-top: 30px;">Up Next:</h2>';
+        foreach($data['up_next'] as $story) {
+            $body .= '<p><strong>' . esc_html($story['title']) . '</strong>: ' . esc_html($story['summary']) . '</p>';
+        }
+    }
+    
+    if (!empty($data['popular_stories'])) {
+        $body .= '<h2 style="margin-top: 30px;">Popular Stories:</h2>';
+        foreach($data['popular_stories'] as $story) {
+            $body .= '<p><strong>' . esc_html($story['title']) . '</strong>: ' . esc_html($story['summary']) . '</p>';
+        }
+    }
+    
+    $body .= '<p style="font-size: 0.8em; color: #888; margin-top: 30px;">Content generated by AI. Please verify information independently.</p>';
+    $body .= '</div>';
 
-    wp_mail($emails, $subject, $body, $headers);
-    wp_send_json_success(['message' => 'Email summary sent to ' . count($emails) . ' recipients.']);
+    $sent = wp_mail($emails, $subject, $body, $headers);
+    if ($sent) {
+        wp_send_json_success(['message' => 'Email summary sent to ' . count($emails) . ' recipients.']);
+    } else {
+        wp_send_json_error(['message' => 'Failed to send email summary.']);
+    }
 });
 
 // Interactive Moderation
@@ -146,88 +222,19 @@ add_action('wp_ajax_innovopedia_brief_moderate_content', function() {
     $response = wp_remote_post($url, $args);
     
     if (is_wp_error($response)) {
-        wp_send_json_error(['message' => $response->get_error_message()]);
-    }
-    $http_code = wp_remote_retrieve_response_code($response);
-    $body = wp_remote_retrieve_body($response);
-
-    if ($http_code >= 200 && $http_code < 300) {
-        wp_send_json_success(json_decode($body));
+        wp_send_json_error(['message' => 'Error moderating content: ' . $response->get_error_message()]);
     } else {
-        wp_send_json_error(['message' => "API Error ($http_code): $body"]);
-    }
-});
-
-// --- Cron Scheduling for Trend Analysis ---
-add_filter( 'cron_schedules', 'innovopedia_brief_custom_cron_schedules' );
-function innovopedia_brief_custom_cron_schedules( $schedules ) {
-    if (!isset($schedules['weekly'])) {
-        $schedules['weekly'] = ['interval' => WEEK_IN_SECONDS, 'display' => __( 'Once Weekly', 'innovopedia-brief' )];
-    }
-    if (!isset($schedules['monthly'])) {
-        $schedules['monthly'] = ['interval' => MONTH_IN_SECONDS, 'display' => __( 'Once Monthly', 'innovopedia-brief' )];
-    }
-    return $schedules;
-}
-
-// Function to run trend analysis via API
-function innovopedia_brief_perform_trend_analysis() {
-    $options = get_option('innovopedia_brief_settings', []);
-    $api_base_url = $options['api_base_url'] ?? '';
-    $api_key = $options['api_key'] ?? '';
-
-    if (empty($api_base_url)) {
-        error_log('Innovopedia Brief: API Base URL not set for trend analysis.');
-        return;
-    }
-
-    $url = rtrim($api_base_url, '/') . '/analyze-trend';
-    $args = ['headers' => ['X-API-Key' => $api_key]];
-    $response = wp_remote_get($url, $args);
-
-    if (is_wp_error($response)) {
-        error_log('Innovopedia Brief: Trend analysis error: ' . $response->get_error_message());
-    } else {
-        $body = wp_remote_retrieve_body($response);
         $http_code = wp_remote_retrieve_response_code($response);
-        if ($http_code !== 200) {
-            error_log('Innovopedia Brief: Trend analysis API returned error: ' . $http_code . ' - ' . $body);
+        if ($http_code >= 200 && $http_code < 300) {
+            wp_send_json_success(['message' => 'Content moderated!']);
+        } else {
+            wp_send_json_error(['message' => "API Error ($http_code): " . wp_remote_retrieve_body($response)]);
         }
     }
-}
-add_action( 'innovopedia_brief_daily_trend_analysis', 'innovopedia_brief_perform_trend_analysis' );
-add_action( 'innovopedia_brief_weekly_trend_analysis', 'innovopedia_brief_perform_trend_analysis' );
-add_action( 'innovopedia_brief_monthly_trend_analysis', 'innovopedia_brief_perform_trend_analysis' );
-
-// AJAX endpoint to update trend schedule
-add_action( 'wp_ajax_innovopedia_brief_set_trend_schedule', function() {
-    check_ajax_referer('innovopedia_brief_admin', 'nonce');
-    if (!current_user_can('manage_options')) wp_send_json_error(['message' => 'Permission denied.']);
-
-    $schedule = sanitize_text_field($_POST['schedule']);
-    if (!in_array($schedule, ['daily', 'weekly', 'monthly'])) wp_send_json_error(['message' => 'Invalid schedule.']);
-
-    $options = get_option('innovopedia_brief_settings', []);
-    $old_schedule = $options['trend_schedule'] ?? 'daily';
-
-    if ($old_schedule !== $schedule) {
-        wp_clear_scheduled_hook("innovopedia_brief_{$old_schedule}_trend_analysis");
-        wp_schedule_event(time(), $schedule, "innovopedia_brief_{$schedule}_trend_analysis");
-        $options['trend_schedule'] = $schedule;
-        update_option('innovopedia_brief_settings', $options);
-    }
-    wp_send_json_success(['message' => 'Schedule updated to ' . $schedule . '.']);
 });
 
-// AJAX endpoint to get current trend schedule
-add_action( 'wp_ajax_innovopedia_brief_get_trend_schedule', function() {
-    if (!current_user_can('manage_options')) wp_send_json_error(['message' => 'Permission denied.']);
-    $options = get_option('innovopedia_brief_settings', []);
-    wp_send_json_success(['schedule' => $options['trend_schedule'] ?? 'daily']);
-});
-
-// Helper function for proxied GET requests to API
-function innovopedia_brief_proxy_get_request($endpoint) {
+// Helper function for proxied GET requests from admin dashboard
+function innovopedia_brief_proxy_admin_get_request($endpoint) {
     check_ajax_referer('innovopedia_brief_admin', 'nonce');
     if (!current_user_can('manage_options')) wp_send_json_error(['message' => 'Permission denied.']);
     
@@ -253,11 +260,12 @@ function innovopedia_brief_proxy_get_request($endpoint) {
     }
 }
 
-// AJAX endpoints for dashboard data (using proxy helper)
-add_action('wp_ajax_innovopedia_brief_analytics', fn() => innovopedia_brief_proxy_get_request('/admin-stats'));
-add_action('wp_ajax_innovopedia_brief_get_feedback', fn() => innovopedia_brief_proxy_get_request('/admin-feedback-list'));
-add_action('wp_ajax_innovopedia_brief_get_questions', fn() => innovopedia_brief_proxy_get_request('/admin-questions-list'));
-add_action('wp_ajax_innovopedia_brief_get_moderation', fn() => innovopedia_brief_proxy_get_request('/admin-moderation'));
+// AJAX endpoints for dashboard data
+add_action('wp_ajax_innovopedia_brief_analytics', fn() => innovopedia_brief_proxy_admin_get_request('/admin-stats'));
+add_action('wp_ajax_innovopedia_brief_get_feedback', fn() => innovopedia_brief_proxy_admin_get_request('/admin-feedback-list'));
+add_action('wp_ajax_innovopedia_brief_get_questions', fn() => innovopedia_brief_proxy_admin_get_request('/admin-questions-list'));
+add_action('wp_ajax_innovopedia_brief_get_moderation', fn() => innovopedia_brief_proxy_admin_get_request('/admin-moderation'));
+add_action('wp_ajax_innovopedia_brief_analyze_trend', fn() => innovopedia_brief_proxy_admin_get_request('/analyze-trend'));
 
 // AJAX endpoint to train AI
 add_action( 'wp_ajax_innovopedia_brief_train_ai', function() {
@@ -267,7 +275,7 @@ add_action( 'wp_ajax_innovopedia_brief_train_ai', function() {
     $options = get_option('innovopedia_brief_settings', []);
     $api_base_url = $options['api_base_url'] ?? '';
     $api_key = $options['api_key'] ?? '';
-    $content_sources = $options['content_sources'] ?? []; // Get selected content types
+    $content_sources = $options['content_sources'] ?? [];
 
     if (empty($api_base_url)) wp_send_json_error(['message' => 'API Base URL not set.']);
 
@@ -275,8 +283,8 @@ add_action( 'wp_ajax_innovopedia_brief_train_ai', function() {
     $args = [
         'method'    => 'POST',
         'headers'   => ['Content-Type' => 'application/json', 'X-API-Key' => $api_key],
-        'body'      => json_encode(['action' => 'train', 'source' => 'website_content', 'content_types' => $content_sources]), // Pass content_types
-        'timeout'   => 60,
+        'body'      => json_encode(['action' => 'train', 'source' => 'website_content', 'content_types' => $content_sources]),
+        'timeout'   => 120, // Increased timeout for training
     ];
     $response = wp_remote_post($url, $args);
 
@@ -285,7 +293,7 @@ add_action( 'wp_ajax_innovopedia_brief_train_ai', function() {
     $body = wp_remote_retrieve_body($response);
     $http_code = wp_remote_retrieve_response_code($response);
     
-    if ($http_code === 200) {
+    if ($http_code >= 200 && $http_code < 300) {
         wp_send_json_success(json_decode($body));
     } else {
         wp_send_json_error(['message' => "API Error ($http_code): $body"]);
