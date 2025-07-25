@@ -213,7 +213,7 @@ add_action('wp_ajax_innovopedia_brief_moderate_content', function() {
     if (!in_array($status, ['approved', 'rejected'])) wp_send_json_error(['message' => 'Invalid status.']);
 
     $options = get_option('innovopedia_brief_settings');
-    $url = rtrim($options['api_base_url'], '/') . '/v1/moderate-content';
+    $url = rtrim($options['api_base_url'], '/') . '/v1/moderate-content'; // Assuming a v1 API for moderation
     $args = [
         'method' => 'POST',
         'headers' => ['Content-Type' => 'application/json', 'X-API-Key' => $options['api_key']],
@@ -262,10 +262,13 @@ function innovopedia_brief_proxy_admin_get_request($endpoint) {
 
 // AJAX endpoints for dashboard data
 add_action('wp_ajax_innovopedia_brief_analytics', function() { return innovopedia_brief_proxy_admin_get_request('/admin-stats'); });
-add_action('wp_ajax_innovopedia_brief_get_feedback', function() { return innovopedia_brief_proxy_admin_get_request('/admin-feedback-list'); });
-add_action('wp_ajax_innovopedia_brief_get_questions', function() { return innovopedia_brief_proxy_admin_get_request('/admin-questions-list'); });
-add_action('wp_ajax_innovopedia_brief_get_moderation', function() { return innovopedia_brief_proxy_admin_get_request('/admin-moderation'); });
+add_action('wp_ajax_innovopedia_brief_get_feedback', function() { return innovopedia_brief_proxy_admin_get_request('/admin-feedback'); });
+add_action('wp_ajax_innovopedia_brief_get_questions', function() { return innovopedia_brief_proxy_admin_get_request('/admin-questions'); });
+add_action('wp_ajax_innovopedia_brief_get_moderation', function() { return innovopedia_brief_proxy_admin_get_request('/admin-moderation'); }); // This endpoint doesn't exist in backend yet
 add_action('wp_ajax_innovopedia_brief_analyze_trend', function() { return innovopedia_brief_proxy_admin_get_request('/analyze-trend'); });
+
+// AJAX endpoint for API Health (using admin-status as the health check)
+add_action('wp_ajax_innovopedia_brief_api_health', function() { return innovopedia_brief_proxy_admin_get_request('/admin-status'); });
 
 // AJAX endpoint to train AI
 add_action( 'wp_ajax_innovopedia_brief_train_ai', function() {
