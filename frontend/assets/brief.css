@@ -1,0 +1,360 @@
+/* Innovopedia Brief - Modern Glassmorphism, Responsive, Accessible */
+#innovopedia-brief-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6em;
+  font-size: 1.1em;
+  padding: 0.7em 1.6em;
+  border-radius: 999px;
+  border: none;
+  background: rgba(255,255,255,0.15);
+  box-shadow: 0 2px 24px rgba(0,0,0,0.09);
+  backdrop-filter: blur(8px);
+  color: #222;
+  cursor: pointer;
+  transition: background 0.2s, box-shadow 0.2s;
+  font-weight: 600;
+}
+#innovopedia-brief-btn i { font-size: 1.2em; }
+#innovopedia-brief-btn:hover, #innovopedia-brief-btn:focus {
+  background: rgba(255,255,255,0.28);
+  box-shadow: 0 4px 32px rgba(0,0,0,0.13);
+  outline: 2px solid #007cfa;
+}
+
+#innovopedia-brief-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(30,34,54,0.36);
+  z-index: 9999;
+  display: flex;
+  justify-content: flex-end;
+  align-items: stretch;
+  overflow: auto;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.28s cubic-bezier(.6,.2,.2,1);
+}
+#innovopedia-brief-overlay.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+#innovopedia-brief-popup {
+  width: 420px;
+  max-width: 96vw;
+  height: 100vh;
+  background: rgba(255,255,255,0.84);
+  box-shadow: -10px 0 40px rgba(0,0,0,0.16);
+  border-radius: 24px 0 0 24px;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  transform: translateX(100%);
+  opacity: 0;
+  transition: transform 0.33s cubic-bezier(.6,.2,.2,1), opacity 0.33s cubic-bezier(.6,.2,.2,1);
+}
+#innovopedia-brief-overlay.active #innovopedia-brief-popup {
+  transform: translateX(0);
+  opacity: 1;
+}
+
+@keyframes skeleton {
+  0% { background-position: -200px 0; }
+  100% { background-position: calc(200px + 100%) 0; }
+}
+
+.innovopedia-skeleton {
+  background-color: #e8eef5;
+  background-image: linear-gradient(90deg, #e8eef5 0px, #f4f8fb 40px, #e8eef5 80px);
+  background-size: 200px 100%;
+  background-repeat: no-repeat;
+  display: inline-block;
+  border-radius: 8px;
+  min-height: 1em;
+  animation: skeleton 1.2s infinite linear;
+}
+
+.innovopedia-toast {
+  position: fixed;
+  right: 32px;
+  bottom: 32px;
+  background: rgba(40,60,120,0.98);
+  color: #fff;
+  padding: 1em 1.5em;
+  border-radius: 999px;
+  font-size: 1em;
+  box-shadow: 0 2px 18px rgba(0,0,0,0.15);
+  z-index: 10000;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(40px);
+  transition: opacity 0.25s, transform 0.25s;
+}
+.innovopedia-toast.show {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+
+.innovopedia-story-card {
+  display: flex;
+  gap: 1em;
+  background: rgba(255,255,255,0.7);
+  border-radius: 16px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+  padding: 1em;
+  align-items: flex-start;
+  transition: box-shadow 0.18s, transform 0.18s, background 0.18s;
+}
+.innovopedia-story-card:hover, .innovopedia-story-card:focus-within {
+  box-shadow: 0 4px 18px rgba(0,124,250,0.13);
+  transform: translateY(-2px) scale(1.025);
+  background: #f3f8ff;
+  outline: 2px solid #007cfa;
+}
+
+
+.innovopedia-drag-handle {
+  width: 48px;
+  height: 6px;
+  background: #d2eaff;
+  border-radius: 3px;
+  margin: 0.8em auto 0.2em auto;
+  display: none;
+}
+@media (max-width: 700px) {
+  .innovopedia-drag-handle { display: block; }
+}
+
+.innovopedia-popup-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.2em 1.6em 1em 1.6em;
+  font-size: 1.3em;
+  font-weight: 700;
+  border-bottom: 1px solid #e0e0e7;
+  background: transparent;
+}
+.innovopedia-avatar {
+  font-size: 1.5em;
+  margin-right: 0.44em;
+  vertical-align: middle;
+  display: inline-block;
+}
+
+.innovopedia-customize-panel {
+  padding: 1.2em 1.6em;
+  border-top: 1px solid #e0e0e7;
+  background: #f8fbff;
+  font-size: 1em;
+  color: #222;
+  border-radius: 0 0 24px 24px;
+  margin-top: 0.5em;
+}
+.innovopedia-avatar-choices {
+  display: flex;
+  gap: 0.4em;
+  flex-wrap: wrap;
+  margin-top: 0.4em;
+}
+.innovopedia-avatar-choice {
+  font-size: 1.3em;
+  background: #eaf6ff;
+  border: 1.5px solid #cce4f7;
+  border-radius: 50%;
+  width: 2.2em;
+  height: 2.2em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: border 0.18s, background 0.18s;
+  outline: none;
+}
+.innovopedia-avatar-choice:focus, .innovopedia-avatar-choice:hover {
+  border: 2px solid #007cfa;
+  background: #d2eaff;
+}
+.innovopedia-greeting-input {
+  font-size: 1em;
+  padding: 0.4em 1em;
+  border-radius: 999px;
+  border: 1px solid #cce4f7;
+  margin-left: 0.5em;
+  background: #fff;
+  width: 180px;
+  max-width: 80vw;
+}
+
+.innovopedia-close-btn {
+  background: none;
+  border: none;
+  font-size: 1.6em;
+  color: #444;
+  cursor: pointer;
+  padding: 0 0.3em;
+  border-radius: 50%;
+  transition: background 0.15s;
+}
+.innovopedia-close-btn:hover, .innovopedia-close-btn:focus {
+  background: #f1f3fa;
+  outline: 2px solid #007cfa;
+}
+
+.innovopedia-popup-content {
+  flex: 1;
+  padding: 1.4em 1.6em;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1.1em;
+}
+
+.innovopedia-greeting {
+  font-size: 1.1em;
+  font-weight: 600;
+  color: #007cfa;
+  margin-bottom: 0.5em;
+}
+.innovopedia-intro {
+  font-size: 1em;
+  color: #444;
+  margin-bottom: 1em;
+}
+
+.innovopedia-stories {
+  display: flex;
+  flex-direction: column;
+  gap: 1.2em;
+}
+.innovopedia-story-card {
+  display: flex;
+  gap: 1em;
+  background: rgba(255,255,255,0.7);
+  border-radius: 16px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+  padding: 1em;
+  align-items: flex-start;
+  transition: box-shadow 0.18s, transform 0.18s;
+}
+.innovopedia-story-card:hover {
+  box-shadow: 0 4px 18px rgba(0,124,250,0.13);
+  transform: translateY(-2px) scale(1.015);
+}
+.innovopedia-story-img {
+  width: 64px;
+  height: 64px;
+  object-fit: cover;
+  border-radius: 12px;
+  flex-shrink: 0;
+}
+.innovopedia-story-content {
+  flex: 1;
+}
+.innovopedia-story-title {
+  font-size: 1.06em;
+  font-weight: 600;
+  margin-bottom: 0.3em;
+  color: #222;
+}
+.innovopedia-story-summary {
+  font-size: 0.99em;
+  color: #3a3a3a;
+}
+
+.innovopedia-upnext-label {
+  font-size: 0.97em;
+  color: #888;
+  margin: 0.7em 0 0.2em 0;
+}
+.innovopedia-topics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5em;
+}
+.innovopedia-pill-btn {
+  border: none;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #eaf6ff 0%, #f8faff 100%);
+  color: #007cfa;
+  padding: 0.5em 1.2em;
+  font-weight: 600;
+  font-size: 1em;
+  cursor: pointer;
+  transition: background 0.18s, color 0.18s;
+  box-shadow: 0 1px 6px rgba(0,124,250,0.06);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5em;
+}
+.innovopedia-pill-btn:hover, .innovopedia-pill-btn:focus {
+  background: #d2eaff;
+  color: #0056a8;
+  outline: 2px solid #007cfa;
+}
+
+.innovopedia-feedback-form {
+  display: flex;
+  gap: 0.5em;
+  margin-top: 1em;
+}
+.innovopedia-feedback-form input[type="text"] {
+  flex: 1;
+  border-radius: 999px;
+  border: 1px solid #cce4f7;
+  padding: 0.5em 1em;
+  font-size: 1em;
+  background: #f8fbff;
+}
+.innovopedia-feedback-form button {
+  min-width: 90px;
+}
+
+.innovopedia-audio-btn {
+  margin-top: 0.6em;
+  background: linear-gradient(90deg, #d2eaff 0%, #eaf6ff 100%);
+  color: #007cfa;
+}
+
+.innovopedia-ai-notice {
+  margin-top: 1.2em;
+  padding: 0.8em 1.2em;
+  border-radius: 12px;
+  background: rgba(240,245,255,0.85);
+  color: #6a6a8b;
+  font-size: 0.97em;
+  display: flex;
+  align-items: center;
+  gap: 0.6em;
+  box-shadow: 0 1px 6px rgba(0,124,250,0.04);
+}
+.innovopedia-ai-notice i {
+  color: #007cfa;
+}
+
+.innovopedia-briefing-loading {
+  text-align: center;
+  color: #007cfa;
+  font-size: 1.1em;
+  padding: 2em 0;
+}
+.innovopedia-briefing-error {
+  text-align: center;
+  color: #e00;
+  font-size: 1.05em;
+  padding: 2em 0;
+}
+
+@media (max-width: 700px) {
+  #innovopedia-brief-popup {
+    width: 100vw;
+    border-radius: 0;
+    max-width: 100vw;
+  }
+  .innovopedia-popup-header, .innovopedia-popup-content {
+    padding-left: 1em; padding-right: 1em;
+  }
+  .innovopedia-story-img { width: 48px; height: 48px; }
+}

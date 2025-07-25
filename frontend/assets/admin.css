@@ -1,0 +1,29 @@
+/* Innovopedia Brief Admin Dashboard Styles */
+.innovopedia-admin-wrap {
+  max-width: 860px;
+  margin-top: 2em;
+}
+.innovopedia-admin-section {
+  margin-bottom: 2.2em;
+  background: #fff;
+  padding: 1.3em 1.7em 1.7em 1.7em;
+  border-radius: 12px;
+  box-shadow: 0 1px 10px rgba(0,124,250,0.05);
+}
+.innovopedia-admin-section h2 {
+  margin-top: 0;
+  color: #007cfa;
+  font-size: 1.18em;
+  font-weight: 700;
+}
+#innovopedia-admin-analytics table {
+  margin-top: 1em;
+}
+#innovopedia-admin-analyze-result {
+  margin-top: 1em;
+  font-size: 1em;
+  color: #333;
+}
+.innovopedia-admin-export {
+  margin-right: 1em;
+}
