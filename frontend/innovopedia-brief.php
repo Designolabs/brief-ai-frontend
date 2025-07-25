@@ -109,6 +109,7 @@ function innovopedia_brief_custom_cron_schedules( $schedules ) {
 function innovopedia_brief_perform_trend_analysis() {
     $options = get_option('innovopedia_brief_settings', []);
     $api_base_url = isset($options['api_base_url']) ? $options['api_base_url'] : '';
+    $api_key = isset($options['api_key']) ? $options['api_key'] : '';
 
     if (empty($api_base_url)) {
         error_log('Innovopedia Brief: API Base URL not set for trend analysis.');
@@ -116,7 +117,12 @@ function innovopedia_brief_perform_trend_analysis() {
     }
 
     $url = rtrim($api_base_url, '/') . '/analyze-trend';
-    $response = wp_remote_get($url);
+    $args = [
+        'headers' => [
+            'X-API-Key' => $api_key
+        ]
+    ];
+    $response = wp_remote_get($url, $args);
 
     if (is_wp_error($response)) {
         error_log('Innovopedia Brief: Error performing trend analysis: ' . $response->get_error_message());
@@ -185,7 +191,7 @@ add_action( 'wp_ajax_innovopedia_brief_get_trend_schedule', function() {
     wp_send_json_success(['schedule' => $current_schedule]);
 });
 
-// Function to train AI on website content
+// AJAX endpoint to train AI on website content
 add_action( 'wp_ajax_innovopedia_brief_train_ai', function() {
     check_ajax_referer('innovopedia_brief_admin', 'nonce');
     if (!current_user_can('manage_options')) {
@@ -225,5 +231,79 @@ add_action( 'wp_ajax_innovopedia_brief_train_ai', function() {
         wp_send_json_success(['message' => 'AI training initiated successfully.', 'response' => json_decode($body)]);
     } else {
         wp_send_json_error(['message' => 'AI training failed with status ' . $http_code . ': ' . $body]);
+    }
+});
+
+// AJAX endpoint to get user feedback list
+add_action( 'wp_ajax_innovopedia_brief_get_feedback', function() {
+    check_ajax_referer('innovopedia_brief_admin', 'nonce');
+    if (!current_user_can('manage_options')) {
+        wp_send_json_error(['message' => 'Permission denied.']);
+    }
+
+    $options = get_option('innovopedia_brief_settings', []);
+    $api_base_url = isset($options['api_base_url']) ? $options['api_base_url'] : '';
+    $api_key = isset($options['api_key']) ? $options['api_key'] : '';
+
+    if (empty($api_base_url)) {
+        wp_send_json_error(['message' => 'API Base URL not set in plugin settings.']);
+    }
+
+    $url = rtrim($api_base_url, '/') . '/admin-feedback-list'; // New endpoint for list
+    $args = [
+        'headers' => [
+            'X-API-Key' => $api_key
+        ]
+    ];
+    $response = wp_remote_get($url, $args);
+
+    if (is_wp_error($response)) {
+        wp_send_json_error(['message' => 'Error fetching feedback: ' . $response->get_error_message()]);
+    }
+
+    $body = wp_remote_retrieve_body($response);
+    $http_code = wp_remote_retrieve_response_code($response);
+
+    if ($http_code === 200) {
+        wp_send_json_success(json_decode($body));
+    } else {
+        wp_send_json_error(['message' => 'Failed to fetch feedback with status ' . $http_code . ': ' . $body]);
+    }
+});
+
+// AJAX endpoint to get user questions list
+add_action( 'wp_ajax_innovopedia_brief_get_questions', function() {
+    check_ajax_referer('innovopedia_brief_admin', 'nonce');
+    if (!current_user_can('manage_options')) {
+        wp_send_json_error(['message' => 'Permission denied.']);
+    }
+
+    $options = get_option('innovopedia_brief_settings', []);
+    $api_base_url = isset($options['api_base_url']) ? $options['api_base_url'] : '';
+    $api_key = isset($options['api_key']) ? $options['api_key'] : '';
+
+    if (empty($api_base_url)) {
+        wp_send_json_error(['message' => 'API Base URL not set in plugin settings.']);
+    }
+
+    $url = rtrim($api_base_url, '/') . '/admin-questions-list'; // New endpoint for list
+    $args = [
+        'headers' => [
+            'X-API-Key' => $api_key
+        ]
+    ];
+    $response = wp_remote_get($url, $args);
+
+    if (is_wp_error($response)) {
+        wp_send_json_error(['message' => 'Error fetching questions: ' . $response->get_error_message()]);
+    }
+
+    $body = wp_remote_retrieve_body($response);
+    $http_code = wp_remote_retrieve_response_code($response);
+
+    if ($http_code === 200) {
+        wp_send_json_success(json_decode($body));
+    } else {
+        wp_send_json_error(['message' => 'Failed to fetch questions with status ' . $http_code . ': ' . $body]);
     }
 });
