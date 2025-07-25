@@ -8,7 +8,7 @@ Text Domain: innovopedia-brief
 Domain Path: /languages
 */
 
-if ( ! defined( 'ABSPath' ) ) exit;
+if ( ! defined( 'ABSPATH' ) ) exit;
 
 define( 'INNOVOPEDIA_BRIEF_VERSION', '1.2.0' );
 define( 'INNOVOPEDIA_BRIEF_DIR', plugin_dir_path( __FILE__ ) );
@@ -256,7 +256,7 @@ function innovopedia_brief_proxy_admin_get_request($endpoint) {
     if ($http_code >= 200 && $http_code < 300) {
         wp_send_json_success(json_decode($body));
     } else {
-        wp_send_json_error(['message' => "API Error ($http_code): $body"]);
+        wp_send_json_error(['message' => "API Error ($http_code): " . wp_remote_retrieve_body($response)]);
     }
 }
 
